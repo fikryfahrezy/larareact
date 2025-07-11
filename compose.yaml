@@ -4,4 +4,6 @@ services:
     env_file:
       - path: ./.env
         required: true
+    args:
+      - PORT=8080
 
