@@ -4,7 +4,15 @@ services:
       context: .
       args:
         - PORT=8080
+        - SSR=true
     env_file:
       - path: ./.env
         required: true
+  inertia-ssr:
+    build:
+      context: .
+      args:
+        - PORT=13714
+        - SSR=true
+    command: php artisan inertia:start-ssr
 

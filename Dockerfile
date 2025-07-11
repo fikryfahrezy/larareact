@@ -84,12 +84,18 @@ WORKDIR /app
 COPY . .
 COPY --from=base /var/www/html/vendor /app/vendor
 
+ARG SSR=false
+
 # Use yarn or npm depending on what type of
 # lock file we might find. Defaults to
 # NPM if no lock file is found.
 # Note: We run "production" for Mix and "build" for Vite
 RUN if [ -f "vite.config.ts" ]; then \
-        ASSET_CMD="build"; \
+        if [ "$SSR" = "true" ]; then \
+            ASSET_CMD="build:ssr"; \
+        else \
+            ASSET_CMD="build"; \
+        fi; \
     else \
         ASSET_CMD="production"; \
     fi; \
@@ -113,12 +119,18 @@ RUN if [ -f "vite.config.ts" ]; then \
 # assets that we generated above
 FROM base
 
+COPY --from=node_modules_go_brrr /usr/local/bin/node /usr/local/bin/node
+COPY --from=node_modules_go_brrr /app/node_modules /var/www/html/node_modules
+
 # Packages like Laravel Nova may have added assets to the public directory
 # or maybe some custom assets were added manually! Either way, we merge
 # in the assets we generated above rather than overwrite them
 COPY --from=node_modules_go_brrr /app/public /var/www/html/public-npm
+COPY --from=node_modules_go_brrr /app/bootstrap/ssr /var/www/html/ssr
 RUN rsync -ar /var/www/html/public-npm/ /var/www/html/public/ \
     && rm -rf /var/www/html/public-npm \
+    && rsync -ar /var/www/html/ssr/ /var/www/html/bootstrap/ssr/ \
+    && rm -rf /var/www/html/ssr \
     && chown -R www-data:www-data /var/www/html/public
 
 # 5. Setup Entrypoint
