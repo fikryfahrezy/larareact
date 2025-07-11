@@ -1,0 +1,7 @@
+services:
+  laravel:
+    build: .
+    env_file:
+      - path: ./.env
+        required: true
+
